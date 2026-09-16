@@ -1,0 +1,12 @@
+{
+  "name": "peoplestore-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve -l 3000 public",
+    "start": "npx serve -l 3000 public"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
