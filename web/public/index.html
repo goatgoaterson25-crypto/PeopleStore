@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PeopleStore</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">People<span>Store</span></a>
+    <nav>
+      <a href="/">Browse</a>
+      <a href="/developer.html">Developer</a>
+      <a href="/admin.html">Admin</a>
+    </nav>
+    <div id="auth-status" class="muted"></div>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Find apps. Publish apps.</h1>
+      <p class="muted">Your marketplace for Android apps — upload, review, download.</p>
+      <div class="search-row">
+        <input id="q" type="search" placeholder="Search apps…" />
+        <select id="category">
+          <option value="">All categories</option>
+          <option>Tools</option>
+          <option>Games</option>
+          <option>Productivity</option>
+          <option>Social</option>
+          <option>Education</option>
+        </select>
+      </div>
+    </section>
+    <section id="grid" class="grid"></section>
+  </main>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    loadCatalog();
+    document.getElementById('q').addEventListener('input', debounce(loadCatalog, 250));
+    document.getElementById('category').addEventListener('change', loadCatalog);
+  </script>
+</body>
+</html>
