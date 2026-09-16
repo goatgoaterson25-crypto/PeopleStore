@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — PeopleStore</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">People<span>Store</span></a>
+    <nav>
+      <a href="/">Browse</a>
+      <a href="/developer.html">Developer</a>
+      <a href="/admin.html">Admin</a>
+    </nav>
+    <div id="auth-status" class="muted"></div>
+  </header>
+
+  <main>
+    <h1>Admin</h1>
+    <p class="muted">Approve or reject pending app submissions.</p>
+
+    <form class="form" style="margin-top:20px" onsubmit="return adminLogin(event)">
+      <label>Admin email</label>
+      <input name="email" type="email" value="admin@peoplestore.local" required />
+      <label>Password</label>
+      <input name="password" type="password" value="changeme" required />
+      <button type="submit">Sign in as admin</button>
+      <div id="msg"></div>
+    </form>
+
+    <section style="margin-top:32px">
+      <div class="row">
+        <button class="secondary" onclick="loadPending()">Pending</button>
+        <button class="secondary" onclick="loadAll()">All apps</button>
+      </div>
+      <div id="list" style="margin-top:16px"></div>
+    </section>
+  </main>
+
+  <script src="/config.js"></script>
+  <script>
+    async function adminLogin(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const msg = document.getElementById('msg');
+      try {
+        const data = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+        });
+        if (data.user.role !== 'ADMIN') throw new Error('Not an admin account');
+        setAuth(data.token, data.user);
+        msg.className = 'success';
+        msg.textContent = 'Admin signed in';
+        loadPending();
+      } catch (err) {
+        msg.className = 'error';
+        msg.textContent = err.message;
+      }
+      return false;
+    }
+
+    async function loadPending() {
+      return loadList('PENDING');
+    }
+
+    async function loadAll() {
+      return loadList('');
+    }
+
+    async function loadList(status) {
+      const el = document.getElementById('list');
+      try {
+        const q = status ? `?status=${status}` : '';
+        const apps = await api('/admin/apps' + q);
+        if (!apps.length) {
+          el.innerHTML = '<p class="muted">No apps.</p>';
+          return;
+        }
+        el.innerHTML = `
+          <table class="table">
+            <thead>
+              <tr><th>Name</th><th>Developer</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${apps
+                .map(
+                  (a) => `
+                <tr>
+                  <td>\( {a.name} <span class="muted">v \){a.version}</span></td>
+                  <td>${a.developer?.email || ''}</td>
+                  <td><span class="badge">${a.status}</span></td>
+                  <td class="row">
+                    <button onclick="approve('${a.id}')">Approve</button>
+                    <button class="danger" onclick="reject('${a.id}')">Reject</button>
+                  </td>
+                </tr>`
+                )
+                .join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        el.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    }
+
+    async function approve(id) {
+      await api(`/admin/apps/${id}/approve`, { method: 'POST', body: '{}' });
+      loadPending();
+    }
+
+    async function reject(id) {
+      await api(`/admin/apps/${id}/reject`, { method: 'POST', body: '{}' });
+      loadPending();
+    }
+  </script>
+</body>
+</html>
