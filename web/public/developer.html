@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Developer — PeopleStore</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">People<span>Store</span></a>
+    <nav>
+      <a href="/">Browse</a>
+      <a href="/developer.html">Developer</a>
+      <a href="/admin.html">Admin</a>
+    </nav>
+    <div id="auth-status" class="muted"></div>
+  </header>
+
+  <main>
+    <h1>Developer</h1>
+    <p class="muted">Register as a developer, create an app listing, upload an APK. Admins approve before it appears in the store.</p>
+
+    <section class="row" style="margin-top:24px;align-items:flex-start">
+      <form class="form" id="login-form" onsubmit="return doLogin(event)">
+        <h3>Sign in</h3>
+        <label>Email</label>
+        <input name="email" type="email" required value="dev@peoplestore.local" />
+        <label>Password</label>
+        <input name="password" type="password" required value="developer" />
+        <button type="submit">Login</button>
+        <p class="muted">Demo: dev@peoplestore.local / developer</p>
+        <div id="login-msg"></div>
+      </form>
+
+      <form class="form" id="register-form" onsubmit="return doRegister(event)">
+        <h3>Register as developer</h3>
+        <label>Name</label>
+        <input name="name" />
+        <label>Email</label>
+        <input name="email" type="email" required />
+        <label>Password</label>
+        <input name="password" type="password" required minlength="6" />
+        <button type="submit">Create developer account</button>
+        <div id="reg-msg"></div>
+      </form>
+    </section>
+
+    <section style="margin-top:40px">
+      <h2>Create app</h2>
+      <form class="form" id="create-form" onsubmit="return createApp(event)">
+        <label>Name</label>
+        <input name="name" required />
+        <label>Description</label>
+        <textarea name="description" rows="3" required></textarea>
+        <label>Category</label>
+        <select name="category">
+          <option>Tools</option>
+          <option>Games</option>
+          <option>Productivity</option>
+          <option>Social</option>
+          <option>Education</option>
+        </select>
+        <label>Version</label>
+        <input name="version" value="1.0.0" required />
+        <label>Package name (optional)</label>
+        <input name="packageName" placeholder="com.example.myapp" />
+        <button type="submit">Create listing</button>
+        <div id="create-msg"></div>
+      </form>
+    </section>
+
+    <section style="margin-top:40px">
+      <h2>My apps</h2>
+      <button class="secondary" onclick="loadMyApps()">Refresh</button>
+      <div id="my-apps" style="margin-top:16px"></div>
+    </section>
+  </main>
+
+  <script src="/config.js"></script>
+  <script>
+    async function doLogin(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const msg = document.getElementById('login-msg');
+      try {
+        const data = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+        });
+        setAuth(data.token, data.user);
+        msg.className = 'success';
+        msg.textContent = 'Signed in';
+        loadMyApps();
+      } catch (err) {
+        msg.className = 'error';
+        msg.textContent = err.message;
+      }
+      return false;
+    }
+
+    async function doRegister(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const msg = document.getElementById('reg-msg');
+      try {
+        const data = await api('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: fd.get('email'),
+            password: fd.get('password'),
+            name: fd.get('name'),
+            asDeveloper: true,
+          }),
+        });
+        setAuth(data.token, data.user);
+        msg.className = 'success';
+        msg.textContent = 'Account created';
+        loadMyApps();
+      } catch (err) {
+        msg.className = 'error';
+        msg.textContent = err.message;
+      }
+      return false;
+    }
+
+    async function createApp(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const msg = document.getElementById('create-msg');
+      try {
+        await api('/apps', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: fd.get('name'),
+            description: fd.get('description'),
+            category: fd.get('category'),
+            version: fd.get('version'),
+            packageName: fd.get('packageName') || undefined,
+          }),
+        });
+        msg.className = 'success';
+        msg.textContent = 'App created. Upload an APK below.';
+        e.target.reset();
+        loadMyApps();
+      } catch (err) {
+        msg.className = 'error';
+        msg.textContent = err.message;
+      }
+      return false;
+    }
+
+    async function uploadApk(appId, input) {
+      const file = input.files[0];
+      if (!file) return;
+      const body = new FormData();
+      body.append('apk', file);
+      try {
+        await api(`/apps/${appId}/upload`, { method: 'POST', body });
+        alert('Uploaded — status set to PENDING for admin review');
+        loadMyApps();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function loadMyApps() {
+      const el = document.getElementById('my-apps');
+      try {
+        const apps = await api('/apps/me/list');
+        if (!apps.length) {
+          el.innerHTML = '<p class="muted">No apps yet.</p>';
+          return;
+        }
+        el.innerHTML = `
+          <table class="table">
+            <thead><tr><th>Name</th><th>Version</th><th>Status</th><th>APK</th></tr></thead>
+            <tbody>
+              ${apps
+                .map(
+                  (a) => `
+                <tr>
+                  <td>${a.name}</td>
+                  <td>${a.version}</td>
+                  <td><span class="badge">${a.status}</span></td>
+                  <td>
+                    <input type="file" accept=".apk,application/vnd.android.package-archive"
+                      onchange="uploadApk('${a.id}', this)" />
+                    ${a.apkObject ? '✓ file present' : ''}
+                  </td>
+                </tr>`
+                )
+                .join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        el.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    }
+
+    if (getToken()) loadMyApps();
+  </script>
+</body>
+</html>
