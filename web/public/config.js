@@ -1,4 +1,7 @@
-const API_URL = window.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Point this at your Railway API
+const API_URL =
+  window.NEXT_PUBLIC_API_URL ||
+  'https://peoplestore-production.up.railway.app';
 
 function getToken() {
   return localStorage.getItem('ps_token');
@@ -25,10 +28,12 @@ function getUser() {
 }
 
 function updateAuthStatus() {
-  const el = document.getElementById('auth-status');
+  const el = document.getElementById('auth-label');
   if (!el) return;
   const user = getUser();
-  el.textContent = user ? `\( {user.email} ( \){user.role})` : 'Not signed in';
+  el.textContent = user
+    ? `${user.email} · ${user.role}`
+    : 'SYSTEM READY';
 }
 
 async function api(path, options = {}) {
