@@ -1,14 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+enum Role {
+  USER
+  DEVELOPER
+  ADMIN
+}
+
+enum AppStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  apps         App[]
+}
+
+model App {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  category    String
+  version     String
+  packageName String?
+  iconUrl     String?
+  apkObject   String?
+  apkSize     Int?
+  status      AppStatus @default(DRAFT)
+  downloads   Int       @default(0)
+  developerId String
+  developer   User      @relation(fields: [developerId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([category])
 }
