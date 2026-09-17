@@ -1,205 +1,103 @@
-/* PeopleStore - Universal Tactical Glass - Cyan + Black
-   Drop this into ANY repo as style.css - no tailwind, no deps
-   Apple glass morphism + Lockheed HUD + Silicon Valley polish
-   Works on generic selectors: header, nav, button, card, grid, etc
-*/
-:root{
-  --bg:#050507;
-  --bg-2:#0A0A0F;
-  --cyan:#00FFF0;
-  --cyan-2:#06B6D4;
-  --cyan-3:#22D3EE;
-  --blue:#0EA5E9;
-  --border:rgba(0,255,240,0.14);
-  --border-strong:rgba(0,255,240,0.28);
-  --glass:rgba(255,255,255,0.04);
-  --glass-2:rgba(255,255,255,0.07);
-  --glass-strong:rgba(255,255,255,0.10);
-  --text:#E8FFFE;
-  --muted:rgba(232,255,254,0.55);
-  --muted-2:rgba(232,255,254,0.35);
-  --radius:16px;
-  --radius-pill:999px;
-  --blur:24px;
-  --font-mono:JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans:-apple-system, BlinkMacSystemFont, "SF Pro Display", Segoe UI, Inter, sans-serif;
-}
-
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+:root{--bg:#050505;--cyan:#00FFF0}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-html,body{
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--font-sans);
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-}
+body{height:100vh;background:#050505;color:white;overflow:hidden;
+     font-family:-apple-system,Inter,sans-serif}
+/* BLACK + GLASS LAYER */
+.bg{position:fixed;inset:0;background:
+  radial-gradient(900px at 50% 38%, rgba(255,255,255,0.08), transparent 60%),
+  radial-gradient(700px at 80% 92%, rgba(0,255,240,0.07), transparent 60%), #050505}
+.glass-sheet{position:fixed;inset:0;
+  backdrop-filter:blur(40px) saturate(180%);
+  background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  border:1px solid rgba(255,255,255,0.07);pointer-events:none;z-index:1}
 
-/* Tactical background - radar grid + cyan orbs */
-body::before{
-  content:'';
-  position:fixed; inset:0; pointer-events:none; z-index:-1;
-  background:
-    radial-gradient(900px at 18% 12%, rgba(0,255,240,0.14), transparent 60%),
-    radial-gradient(700px at 82% 88%, rgba(14,165,233,0.11), transparent 60%),
-    radial-gradient(500px at 50% 50%, rgba(34,211,238,0.06), transparent 70%),
-    linear-gradient(90deg, rgba(0,255,240,0.04) 1px, transparent 1px),
-    linear-gradient(rgba(0,255,240,0.04) 1px, transparent 1px);
-  background-size:auto,auto,auto,42px 42px,42px 42px;
-}
+/* DOCK */
+.dock-wrap{position:relative;z-index:3;margin-top:auto;height:360px;
+  perspective:1400px;display:flex;flex-direction:column;
+  justify-content:flex-end;padding-bottom:28px}
+.dock{display:flex;gap:20px;overflow-x:auto;padding:20px 50vw;
+  scroll-snap-type:x mandatory;scrollbar-width:none}
+.dock::-webkit-scrollbar{display:none}
+.card{flex:0 0 184px;width:184px;height:184px;scroll-snap-align:center;
+  background:linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+  border:1px solid rgba(255,255,255,0.13);border-radius:26px;
+  backdrop-filter:blur(20px);box-shadow:0 14px 44px rgba(0,0,0,0.65);
+  padding:16px;cursor:grab;transform-style:preserve-3d;will-change:transform}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="glass-sheet"></div>
+<div class="dock-wrap">
+  <div class="dock" id="dock"></div>
+</div>
+<script>
+// Same JS as I wrote - coverflow + drag to save
+const APPS=[{id:'signal',name:'Signal Prism',dev:'VANTA',color:'#00FFF0'},
+{id:'vector',name:'Vector Map',dev:'TERRAFORM',color:'#7CFF00'},
+{id:'kinetic',name:'Kinetic',dev:'AERO',color:'#FF4D00'},
+{id:'ghost',name:'Ghost Note',dev:'SABLE',color:'#AA5CFF'}];
 
-/* Subtle noise */
-body::after{
-  content:''; position:fixed; inset:0; pointer-events:none; z-index:-1; opacity:0.03;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
+const dock=document.getElementById('dock');
+dock.innerHTML=APPS.map(a=>`
+  <div class="card" data-id="${a.id}">
+    <div style="width:58px;height:58px;border-radius:16px;
+      background:radial-gradient(${a.color}33, transparent);
+      color:${a.color};display:grid;place-items:center;font-weight:900">
+      ${a.name.slice(0,2)}</div>
+    <div style="margin-top:auto;font-weight:800">${a.name}</div>
+  </div>`).join('');
 
-/* --- Universal Header / Nav - Floating Dynamic Island --- */
-header, nav, .header, .navbar, [class*="header"], [class*="nav"]{
-  position:sticky; top:16px; z-index:100;
-  margin:16px auto; max-width:1200px; width:calc(100% - 32px);
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
-  padding:12px 18px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)) !important;
-  border:1px solid var(--border) !important;
-  border-radius:var(--radius-pill) !important;
-  backdrop-filter:blur(var(--blur)) saturate(160%) !important;
-  -webkit-backdrop-filter:blur(var(--blur)) saturate(160%) !important;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+// Coverflow turn
+function coverflow(){
+  const center=dock.getBoundingClientRect().left+dock.offsetWidth/2;
+  dock.querySelectorAll('.card').forEach(card=>{
+    const cx=card.getBoundingClientRect().left+92;
+    const dist=cx-center;
+    const rot=Math.max(-46,Math.min(46,dist*0.11));
+    const scale=Math.max(0.72,1-Math.abs(dist)*0.00058);
+    card.style.transform=`rotateY(${rot}deg) scale(${scale})`;
+    card.style.opacity=Math.max(0.35,1-Math.abs(dist)*0.0011);
+  });
+  requestAnimationFrame(coverflow);
 }
+coverflow();
 
-/* Logo / Brand */
-.logo, [class*="logo"], h1:first-child{
-  font-weight:900; letter-spacing:-0.04em; font-size:18px;
-}
-.logo span, [class*="logo"] span{ 
-  background:linear-gradient(90deg,var(--cyan),var(--blue));
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-
-/* --- Universal Buttons - Cyan Tactical --- */
-button, .btn, [class*="btn"], [class*="button"], a.button{
-  font-family:var(--font-mono);
-  font-size:11px; letter-spacing:0.12em; font-weight:800;
-  height:36px; padding:0 18px; border-radius:var(--radius-pill);
-  border:1px solid var(--border) !important;
-  background:var(--glass) !important;
-  color:var(--muted) !important;
-  cursor:pointer;
-  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
-}
-button:hover, .btn:hover{
-  border-color:var(--border-strong) !important;
-  background:var(--glass-2) !important;
-  color:var(--text) !important;
-  transform:translateY(-1px);
-}
-/* Primary CTA */
-button.primary, .btn-primary, [class*="primary"], button[class*="deploy"], button[class*="download"]{
-  background:var(--cyan) !important;
-  color:#000 !important;
-  border-color:var(--cyan) !important;
-  box-shadow:0 0 0 1px rgba(0,255,240,0.2), 0 4px 16px rgba(0,255,240,0.2) !important;
-}
-button.primary:hover{
-  background:#00E5D8 !important;
-  box-shadow:0 0 0 1px var(--cyan), 0 8px 24px rgba(0,255,240,0.3) !important;
-}
-
-/* --- Search / Input - Target Acquisition --- */
-input, textarea, select, [class*="search"]{
-  height:36px; background:rgba(0,0,0,0.5) !important;
-  border:1px solid var(--border) !important;
-  border-radius:var(--radius-pill) !important;
-  padding:0 16px; color:var(--text) !important;
-  font-family:var(--font-mono); font-size:12px;
-  outline:none; transition:all 0.2s;
-}
-input:focus{
-  border-color:var(--border-strong) !important;
-  box-shadow:0 0 0 3px rgba(0,255,240,0.10) !important;
-}
-input::placeholder{color:var(--muted-2)}
-
-/* --- Universal Layout --- */
-main, .main, .container, [class*="container"], [class*="content"]{
-  max-width:1200px; margin:0 auto; padding:24px 16px; width:100%;
-}
-
-/* Headings - Words exactly where they need to be */
-h1{
-  font-size:clamp(32px, 6vw, 64px); font-weight:900; letter-spacing:-0.05em; line-height:0.95;
-  margin-bottom:12px;
-}
-h2{font-size:24px; font-weight:800; letter-spacing:-0.03em}
-h3{font-size:18px; font-weight:700}
-p, [class*="desc"], [class*="subtitle"]{
-  color:var(--muted); line-height:1.6; font-size:14px;
-}
-
-/* --- Universal Grid --- */
-.grid, [class*="grid"], [class*="list"], [class*="apps"], [class*="cards"]{
-  display:grid !important;
-  grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)) !important;
-  gap:16px !important;
-  margin-top:24px;
-}
-
-/* --- Universal Card - Apple Glass + Tactical Border --- */
-.card, [class*="card"], [class*="app-"], [class*="item"], [class*="box"], .tile{
-  position:relative;
-  background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
-  border:1px solid var(--border) !important;
-  border-radius:var(--radius) !important;
-  padding:16px !important;
-  backdrop-filter:blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter:blur(20px) saturate(140%) !important;
-  box-shadow:0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-  transition:all 0.35s cubic-bezier(0.16,1,0.3,1) !important;
-  overflow:hidden;
-}
-/* Inner highlight - Apple style */
-.card::before, [class*="card"]::before{
-  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-  border:1px solid rgba(255,255,255,0.08); mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite:exclude; opacity:0.8;
-}
-.card:hover, [class*="card"]:hover{
-  transform:translateY(-3px) scale(1.01) !important;
-  border-color:var(--border-strong) !important;
-  box-shadow:0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px var(--cyan-2), 0 0 24px rgba(0,255,240,0.15) !important;
-}
-
-/* Icon inside card */
-.card img, [class*="card"] img, [class*="icon"]{
-  width:48px; height:48px; border-radius:12px;
-  background:radial-gradient(120% at 30% 20%, rgba(0,255,240,0.25), transparent) !important;
-  border:1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* Tactical labels */
-.badge, [class*="badge"], [class*="status"], [class*="tag"], [class*="pill"]{
-  font-family:var(--font-mono); font-size:8px; letter-spacing:0.14em;
-  padding:4px 8px; border-radius:var(--radius-pill);
-  border:1px solid var(--border); background:rgba(0,255,240,0.08);
-  color:var(--cyan); text-transform:uppercase;
-}
-
-/* Links */
-a{color:var(--cyan-3); text-decoration:none}
-a:hover{color:var(--cyan)}
-
-/* Mono utility - for tactical data */
-.mono, [class*="mono"], [class*="coord"], [class*="meta"]{
-  font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; color:var(--muted-2);
-}
-
-/* Scrollbar - tactical */
-::-webkit-scrollbar{width:8px; height:8px}
-::-webkit-scrollbar-thumb{background:rgba(0,255,240,0.15); border-radius:999px; border:1px solid var(--border)}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb:hover{background:rgba(0,255,240,0.25)}
-
-/* Selection */
-::selection{background:var(--cyan); color:#000}
+// Drag to save (simplified - full version has localStorage)
+let cur=null,clone=null,sx=0,sy=0;
+dock.addEventListener('pointerdown',e=>{
+  cur=e.target.closest('.card'); if(!cur) return;
+  sx=e.clientX; sy=e.clientY; cur.setPointerCapture(e.pointerId);
+});
+window.addEventListener('pointermove',e=>{
+  if(!cur) return;
+  if(!clone){
+    clone=cur.cloneNode(true);
+    clone.style.position='fixed';clone.style.zIndex=9999;
+    clone.style.pointerEvents='none';document.body.appendChild(clone);
+  }
+  clone.style.left=e.clientX-92+'px';
+  clone.style.top=e.clientY-92+'px';
+  if(e.clientY-sy<-90){clone.style.borderColor='#00FFF0';}
+});
+window.addEventListener('pointerup',e=>{
+  if(clone){
+    if(e.clientY-sy<-90){
+      let saved=JSON.parse(localStorage.getItem('bh_saved')||'[]');
+      if(!saved.includes(cur.dataset.id)){
+        saved.push(cur.dataset.id);
+        localStorage.setItem('bh_saved',JSON.stringify(saved));
+        alert('Saved '+cur.dataset.id+' to Black Hole!');
+      }
+    }
+    clone.remove();
+  }
+  cur=null;clone=null;
+});
+</script>
+</body>
+</html>
