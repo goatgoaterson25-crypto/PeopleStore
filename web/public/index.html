@@ -3,27 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PeopleStore</title>
+  <title>PEOPLESTORE // APP OPERATIONS</title>
+  <meta name="theme-color" content="#030507" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <a href="/" class="brand">People<span>Store</span></a>
-    <nav>
-      <a href="/">Browse</a>
-      <a href="/developer.html">Developer</a>
-      <a href="/admin.html">Admin</a>
-    </nav>
-    <div id="auth-status" class="muted"></div>
-  </header>
-  <main>
+  <div class="grid-floor" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="topbar">
+      <a href="/" class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-text">PEOPLE<span>STORE</span></div>
+      </a>
+      <nav class="nav">
+        <a href="/" class="active">Catalog</a>
+        <a href="/developer.html">Developer</a>
+        <a href="/admin.html">Admin</a>
+      </nav>
+      <div id="auth-status" class="status-pill">
+        <span class="dot"></span>
+        <span id="auth-label">SYSTEM READY</span>
+      </div>
+    </header>
+
     <section class="hero">
-      <h1>Find apps. Publish apps.</h1>
-      <p class="muted">Your marketplace for Android apps — upload, review, download.</p>
-      <div class="search-row">
-        <input id="q" type="search" placeholder="Search apps…" />
+      <div class="hero-tag">Secure distribution grid</div>
+      <h1>Software inventory for the <em>networked edge</em></h1>
+      <p>
+        Classified-clearance optional. Browse approved payloads, publish builds,
+        route approvals through ops. Matrix telemetry meets defense-grade UI.
+      </p>
+      <div class="search-deck">
+        <input id="q" type="search" placeholder="QUERY DESIGNATION…" autocomplete="off" />
         <select id="category">
-          <option value="">All categories</option>
+          <option value="">ALL SECTORS</option>
           <option>Tools</option>
           <option>Games</option>
           <option>Productivity</option>
@@ -32,8 +46,14 @@
         </select>
       </div>
     </section>
+
+    <div class="section-head">
+      <h2>Approved inventory</h2>
+      <span class="meta" id="count-meta">SCANNING…</span>
+    </div>
     <section id="grid" class="grid"></section>
-  </main>
+  </div>
+
   <script src="/config.js"></script>
   <script src="/app.js"></script>
   <script>
