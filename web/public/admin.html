@@ -4,40 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin — PeopleStore</title>
+  <meta name="theme-color" content="#050505" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <a href="/" class="brand">People<span>Store</span></a>
-    <nav>
-      <a href="/">Browse</a>
-      <a href="/developer.html">Developer</a>
-      <a href="/admin.html">Admin</a>
-    </nav>
-    <div id="auth-status" class="muted"></div>
-  </header>
+  <div class="gargantua" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a href="/" class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">PEOPLE<span>STORE</span></div>
+      </a>
+      <nav class="nav">
+        <a href="/">Catalog</a>
+        <a href="/developer.html">Developer</a>
+        <a href="/admin.html" class="active">Admin</a>
+      </nav>
+      <div class="status-pill">
+        <span class="dot" data-auth-dot></span>
+        <span data-auth-label>GUEST</span>
+      </div>
+    </header>
 
-  <main>
-    <h1>Admin</h1>
-    <p class="muted">Approve or reject pending app submissions.</p>
+    <h1 style="font-size:1.5rem;margin-bottom:8px">Admin</h1>
+    <p class="muted" style="margin-bottom:20px">Approve or reject pending submissions.</p>
 
-    <form class="form" style="margin-top:20px" onsubmit="return adminLogin(event)">
+    <form class="form glass" id="admin-login" style="margin-bottom:28px">
       <label>Admin email</label>
       <input name="email" type="email" value="admin@peoplestore.local" required />
       <label>Password</label>
       <input name="password" type="password" value="changeme" required />
-      <button type="submit">Sign in as admin</button>
+      <button class="btn primary" type="submit">Sign in as admin</button>
       <div id="msg"></div>
     </form>
 
-    <section style="margin-top:32px">
-      <div class="row">
-        <button class="secondary" onclick="loadPending()">Pending</button>
-        <button class="secondary" onclick="loadAll()">All apps</button>
-      </div>
-      <div id="list" style="margin-top:16px"></div>
-    </section>
-  </main>
+    <div class="row" style="margin-bottom:12px">
+      <button type="button" class="btn ghost" id="btn-pending">Pending</button>
+      <button type="button" class="btn ghost" id="btn-all">All apps</button>
+    </div>
+    <div id="list"></div>
+  </div>
 
   <script src="/config.js"></script>
   <script>
@@ -48,73 +55,59 @@
       try {
         const data = await api('/auth/login', {
           method: 'POST',
-          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+          body: JSON.stringify({
+            email: fd.get('email'),
+            password: fd.get('password'),
+          }),
         });
         if (data.user.role !== 'ADMIN') throw new Error('Not an admin account');
         setAuth(data.token, data.user);
         msg.className = 'success';
         msg.textContent = 'Admin signed in';
-        loadPending();
+        loadList('PENDING');
       } catch (err) {
         msg.className = 'error';
         msg.textContent = err.message;
       }
-      return false;
-    }
-
-    async function loadPending() {
-      return loadList('PENDING');
-    }
-
-    async function loadAll() {
-      return loadList('');
     }
 
     async function loadList(status) {
       const el = document.getElementById('list');
       try {
-        const q = status ? `?status=${status}` : '';
+        const q = status ? '?status=' + status : '';
         const apps = await api('/admin/apps' + q);
         if (!apps.length) {
           el.innerHTML = '<p class="muted">No apps.</p>';
           return;
         }
-        el.innerHTML = `
-          <table class="table">
-            <thead>
-              <tr><th>Name</th><th>Developer</th><th>Status</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              ${apps
-                .map(
-                  (a) => `
-                <tr>
-                  <td>\( {a.name} <span class="muted">v \){a.version}</span></td>
-                  <td>${a.developer?.email || ''}</td>
-                  <td><span class="badge">${a.status}</span></td>
-                  <td class="row">
-                    <button onclick="approve('${a.id}')">Approve</button>
-                    <button class="danger" onclick="reject('${a.id}')">Reject</button>
-                  </td>
-                </tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>`;
+        el.innerHTML = `<table class="table"><thead><tr><th>Name</th><th>Dev</th><th>Status</th><th></th></tr></thead><tbody>
+          ${apps.map((a) => `<tr>
+            <td>${a.name} <span class="muted">v${a.version}</span></td>
+            <td>${(a.developer && a.developer.email) || ''}</td>
+            <td>${a.status}</td>
+            <td>
+              <button type="button" class="btn primary" onclick="approve('${a.id}')">Approve</button>
+              <button type="button" class="btn danger" onclick="reject('${a.id}')">Reject</button>
+            </td>
+          </tr>`).join('')}
+        </tbody></table>`;
       } catch (err) {
-        el.innerHTML = `<p class="error">${err.message}</p>`;
+        el.innerHTML = '<p class="error">' + err.message + '</p>';
       }
     }
 
     async function approve(id) {
-      await api(`/admin/apps/${id}/approve`, { method: 'POST', body: '{}' });
-      loadPending();
+      await api('/admin/apps/' + id + '/approve', { method: 'POST', body: '{}' });
+      loadList('PENDING');
+    }
+    async function reject(id) {
+      await api('/admin/apps/' + id + '/reject', { method: 'POST', body: '{}' });
+      loadList('PENDING');
     }
 
-    async function reject(id) {
-      await api(`/admin/apps/${id}/reject`, { method: 'POST', body: '{}' });
-      loadPending();
-    }
+    document.getElementById('admin-login').addEventListener('submit', adminLogin);
+    document.getElementById('btn-pending').addEventListener('click', () => loadList('PENDING'));
+    document.getElementById('btn-all').addEventListener('click', () => loadList(''));
   </script>
 </body>
 </html>

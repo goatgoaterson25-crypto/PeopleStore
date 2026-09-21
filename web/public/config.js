@@ -1,7 +1,9 @@
-// Point this at your Railway API
+// PeopleStore — API bridge
 const API_URL =
   window.NEXT_PUBLIC_API_URL ||
   'https://peoplestore-production.up.railway.app';
+
+const SAVED_KEY = 'ps_saved_apps';
 
 function getToken() {
   return localStorage.getItem('ps_token');
@@ -28,12 +30,13 @@ function getUser() {
 }
 
 function updateAuthStatus() {
-  const el = document.getElementById('auth-label');
-  if (!el) return;
   const user = getUser();
-  el.textContent = user
-    ? `${user.email} · ${user.role}`
-    : 'SYSTEM READY';
+  document.querySelectorAll('[data-auth-label]').forEach((el) => {
+    el.textContent = user ? `${user.email} · ${user.role}` : 'GUEST';
+  });
+  document.querySelectorAll('[data-auth-dot]').forEach((el) => {
+    el.classList.toggle('online', !!user);
+  });
 }
 
 async function api(path, options = {}) {
@@ -44,9 +47,14 @@ async function api(path, options = {}) {
   const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let res;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch (e) {
+    throw new Error('Network error — is the API up?');
+  }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || res.statusText);
+  if (!res.ok) throw new Error(data.error || res.statusText || 'Request failed');
   return data;
 }
 
@@ -56,6 +64,34 @@ function debounce(fn, ms) {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), ms);
   };
+}
+
+function getSaved() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function setSaved(list) {
+  localStorage.setItem(SAVED_KEY, JSON.stringify(list));
+}
+
+function saveApp(app) {
+  const list = getSaved().filter((a) => a.id !== app.id);
+  list.unshift({
+    id: app.id,
+    name: app.name,
+    category: app.category,
+    version: app.version,
+    description: app.description,
+  });
+  setSaved(list.slice(0, 24));
+}
+
+function unsaveApp(id) {
+  setSaved(getSaved().filter((a) => a.id !== id));
 }
 
 document.addEventListener('DOMContentLoaded', updateAuthStatus);

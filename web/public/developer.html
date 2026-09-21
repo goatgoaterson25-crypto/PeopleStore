@@ -4,53 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Developer — PeopleStore</title>
+  <meta name="theme-color" content="#050505" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <a href="/" class="brand">People<span>Store</span></a>
-    <nav>
-      <a href="/">Browse</a>
-      <a href="/developer.html">Developer</a>
-      <a href="/admin.html">Admin</a>
-    </nav>
-    <div id="auth-status" class="muted"></div>
-  </header>
+  <div class="gargantua" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a href="/" class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">PEOPLE<span>STORE</span></div>
+      </a>
+      <nav class="nav">
+        <a href="/">Catalog</a>
+        <a href="/developer.html" class="active">Developer</a>
+        <a href="/admin.html">Admin</a>
+      </nav>
+      <div class="status-pill">
+        <span class="dot" data-auth-dot></span>
+        <span data-auth-label>GUEST</span>
+      </div>
+    </header>
 
-  <main>
-    <h1>Developer</h1>
-    <p class="muted">Register as a developer, create an app listing, upload an APK. Admins approve before it appears in the store.</p>
+    <h1 style="font-size:1.5rem;margin-bottom:8px">Developer console</h1>
+    <p class="muted" style="margin-bottom:24px">Sign in, create a listing, upload an APK (storage optional on free tier).</p>
 
-    <section class="row" style="margin-top:24px;align-items:flex-start">
-      <form class="form" id="login-form" onsubmit="return doLogin(event)">
+    <div class="row">
+      <form class="form glass" id="login-form">
         <h3>Sign in</h3>
         <label>Email</label>
-        <input name="email" type="email" required value="dev@peoplestore.local" />
+        <input name="email" type="email" required value="dev@peoplestore.local" autocomplete="username" />
         <label>Password</label>
-        <input name="password" type="password" required value="developer" />
-        <button type="submit">Login</button>
-        <p class="muted">Demo: dev@peoplestore.local / developer</p>
+        <input name="password" type="password" required value="developer" autocomplete="current-password" />
+        <button class="btn primary" type="submit">Login</button>
+        <p class="muted" style="font-size:0.7rem">Demo: dev@peoplestore.local / developer</p>
         <div id="login-msg"></div>
       </form>
 
-      <form class="form" id="register-form" onsubmit="return doRegister(event)">
-        <h3>Register as developer</h3>
+      <form class="form glass" id="register-form">
+        <h3>Register developer</h3>
         <label>Name</label>
         <input name="name" />
         <label>Email</label>
-        <input name="email" type="email" required />
+        <input name="email" type="email" required autocomplete="email" />
         <label>Password</label>
-        <input name="password" type="password" required minlength="6" />
-        <button type="submit">Create developer account</button>
+        <input name="password" type="password" required minlength="6" autocomplete="new-password" />
+        <button class="btn primary" type="submit">Create account</button>
         <div id="reg-msg"></div>
       </form>
-    </section>
+    </div>
 
-    <section style="margin-top:40px">
-      <h2>Create app</h2>
-      <form class="form" id="create-form" onsubmit="return createApp(event)">
+    <section style="margin-top:36px">
+      <h2 style="font-size:0.8rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px">Create app</h2>
+      <form class="form glass" id="create-form" style="max-width:480px">
         <label>Name</label>
-        <input name="name" required />
+        <input name="name" required placeholder="Signal Prism" />
         <label>Description</label>
         <textarea name="description" rows="3" required></textarea>
         <label>Category</label>
@@ -63,19 +72,22 @@
         </select>
         <label>Version</label>
         <input name="version" value="1.0.0" required />
-        <label>Package name (optional)</label>
-        <input name="packageName" placeholder="com.example.myapp" />
-        <button type="submit">Create listing</button>
+        <label>Package name</label>
+        <input name="packageName" placeholder="com.example.app" />
+        <button class="btn primary" type="submit">Create listing</button>
         <div id="create-msg"></div>
       </form>
     </section>
 
-    <section style="margin-top:40px">
-      <h2>My apps</h2>
-      <button class="secondary" onclick="loadMyApps()">Refresh</button>
-      <div id="my-apps" style="margin-top:16px"></div>
+    <section style="margin-top:36px">
+      <div class="row" style="align-items:center;margin-bottom:12px">
+        <h2 style="font-size:0.8rem;letter-spacing:0.14em;text-transform:uppercase">My apps</h2>
+        <button type="button" class="btn ghost" id="refresh-apps">Refresh</button>
+        <button type="button" class="btn ghost" id="logout-btn">Log out</button>
+      </div>
+      <div id="my-apps"></div>
     </section>
-  </main>
+  </div>
 
   <script src="/config.js"></script>
   <script>
@@ -83,20 +95,24 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const msg = document.getElementById('login-msg');
+      msg.textContent = 'Signing in…';
+      msg.className = 'muted';
       try {
         const data = await api('/auth/login', {
           method: 'POST',
-          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+          body: JSON.stringify({
+            email: fd.get('email'),
+            password: fd.get('password'),
+          }),
         });
         setAuth(data.token, data.user);
         msg.className = 'success';
-        msg.textContent = 'Signed in';
+        msg.textContent = 'Signed in as ' + data.user.role;
         loadMyApps();
       } catch (err) {
         msg.className = 'error';
         msg.textContent = err.message;
       }
-      return false;
     }
 
     async function doRegister(e) {
@@ -109,19 +125,18 @@
           body: JSON.stringify({
             email: fd.get('email'),
             password: fd.get('password'),
-            name: fd.get('name'),
+            name: fd.get('name') || undefined,
             asDeveloper: true,
           }),
         });
         setAuth(data.token, data.user);
         msg.className = 'success';
-        msg.textContent = 'Account created';
+        msg.textContent = 'Developer account created';
         loadMyApps();
       } catch (err) {
         msg.className = 'error';
         msg.textContent = err.message;
       }
-      return false;
     }
 
     async function createApp(e) {
@@ -140,14 +155,13 @@
           }),
         });
         msg.className = 'success';
-        msg.textContent = 'App created. Upload an APK below.';
+        msg.textContent = 'Listing created';
         e.target.reset();
         loadMyApps();
       } catch (err) {
         msg.className = 'error';
         msg.textContent = err.message;
       }
-      return false;
     }
 
     async function uploadApk(appId, input) {
@@ -156,8 +170,8 @@
       const body = new FormData();
       body.append('apk', file);
       try {
-        await api(`/apps/${appId}/upload`, { method: 'POST', body });
-        alert('Uploaded — status set to PENDING for admin review');
+        await api('/apps/' + appId + '/upload', { method: 'POST', body });
+        alert('Uploaded — pending admin review (if storage is configured)');
         loadMyApps();
       } catch (err) {
         alert(err.message);
@@ -166,38 +180,36 @@
 
     async function loadMyApps() {
       const el = document.getElementById('my-apps');
+      if (!getToken()) {
+        el.innerHTML = '<p class="muted">Sign in to see your apps.</p>';
+        return;
+      }
       try {
         const apps = await api('/apps/me/list');
         if (!apps.length) {
           el.innerHTML = '<p class="muted">No apps yet.</p>';
           return;
         }
-        el.innerHTML = `
-          <table class="table">
-            <thead><tr><th>Name</th><th>Version</th><th>Status</th><th>APK</th></tr></thead>
-            <tbody>
-              ${apps
-                .map(
-                  (a) => `
-                <tr>
-                  <td>${a.name}</td>
-                  <td>${a.version}</td>
-                  <td><span class="badge">${a.status}</span></td>
-                  <td>
-                    <input type="file" accept=".apk,application/vnd.android.package-archive"
-                      onchange="uploadApk('${a.id}', this)" />
-                    ${a.apkObject ? '✓ file present' : ''}
-                  </td>
-                </tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>`;
+        el.innerHTML = `<table class="table"><thead><tr><th>Name</th><th>Ver</th><th>Status</th><th>APK</th></tr></thead><tbody>
+          ${apps.map((a) => `<tr>
+            <td>${a.name}</td><td>${a.version}</td>
+            <td>${a.status}</td>
+            <td><input type="file" accept=".apk" onchange="uploadApk('${a.id}', this)" /></td>
+          </tr>`).join('')}
+        </tbody></table>`;
       } catch (err) {
-        el.innerHTML = `<p class="error">${err.message}</p>`;
+        el.innerHTML = '<p class="error">' + err.message + '</p>';
       }
     }
 
+    document.getElementById('login-form').addEventListener('submit', doLogin);
+    document.getElementById('register-form').addEventListener('submit', doRegister);
+    document.getElementById('create-form').addEventListener('submit', createApp);
+    document.getElementById('refresh-apps').addEventListener('click', loadMyApps);
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      clearAuth();
+      loadMyApps();
+    });
     if (getToken()) loadMyApps();
   </script>
 </body>

@@ -3,17 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PEOPLESTORE // APP OPERATIONS</title>
-  <meta name="theme-color" content="#030507" />
+  <title>PeopleStore — Event Horizon</title>
+  <meta name="theme-color" content="#050505" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="grid-floor" aria-hidden="true"></div>
+  <svg class="svg-defs" aria-hidden="true">
+    <filter id="liquid-glass" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="liquid-glass-strong" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" seed="7" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <div class="gargantua" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
 
   <div class="shell">
     <header class="topbar">
       <a href="/" class="brand">
-        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-mark"></div>
         <div class="brand-text">PEOPLE<span>STORE</span></div>
       </a>
       <nav class="nav">
@@ -21,23 +33,20 @@
         <a href="/developer.html">Developer</a>
         <a href="/admin.html">Admin</a>
       </nav>
-      <div id="auth-status" class="status-pill">
-        <span class="dot"></span>
-        <span id="auth-label">SYSTEM READY</span>
+      <div class="status-pill">
+        <span class="dot" data-auth-dot></span>
+        <span data-auth-label>GUEST</span>
       </div>
     </header>
 
     <section class="hero">
-      <div class="hero-tag">Secure distribution grid</div>
-      <h1>Software inventory for the <em>networked edge</em></h1>
-      <p>
-        Classified-clearance optional. Browse approved payloads, publish builds,
-        route approvals through ops. Matrix telemetry meets defense-grade UI.
-      </p>
+      <div class="hero-tag">Event horizon distribution</div>
+      <h1>Find <em>Signal Prism</em> in two seconds</h1>
+      <p>Search. Acquire. Drag into the singularity to save. Liquid glass over a quiet Gargantua.</p>
       <div class="search-deck">
-        <input id="q" type="search" placeholder="QUERY DESIGNATION…" autocomplete="off" />
+        <input id="q" type="search" placeholder="Search apps — try Signal Prism…" autocomplete="off" autofocus />
         <select id="category">
-          <option value="">ALL SECTORS</option>
+          <option value="">All sectors</option>
           <option>Tools</option>
           <option>Games</option>
           <option>Productivity</option>
@@ -49,17 +58,22 @@
 
     <div class="section-head">
       <h2>Approved inventory</h2>
-      <span class="meta" id="count-meta">SCANNING…</span>
+      <span class="meta" id="count-meta">…</span>
     </div>
     <section id="grid" class="grid"></section>
   </div>
 
+  <div id="singularity" class="singularity" title="Drop here to save">
+    <div class="singularity-core"></div>
+    <span>SAVE</span>
+  </div>
+
+  <footer id="saved-tray" class="saved-tray empty-tray">
+    <div class="tray-label">Saved</div>
+    <div id="saved-track" class="saved-track"></div>
+  </footer>
+
   <script src="/config.js"></script>
   <script src="/app.js"></script>
-  <script>
-    loadCatalog();
-    document.getElementById('q').addEventListener('input', debounce(loadCatalog, 250));
-    document.getElementById('category').addEventListener('change', loadCatalog);
-  </script>
 </body>
 </html>
