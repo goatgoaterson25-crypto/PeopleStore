@@ -30,9 +30,7 @@ app.use((err, _req, res, _next) => {
 
 async function start() {
   try {
-    await ensureBucket().catch((e) => {
-      console.warn('MinIO unavailable, APK uploads disabled:', e.message);
-    });
+    await ensureBucket();
     app.listen(Number(PORT), '0.0.0.0', () => {
       console.log(`PeopleStore API listening on :${PORT}`);
     });
